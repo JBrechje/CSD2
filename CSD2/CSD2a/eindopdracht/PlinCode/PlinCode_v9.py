@@ -1,0 +1,631 @@
+
+import pygame
+import time
+#import sa #simpleaudio
+import random
+
+
+##sample_choice = None
+
+
+def greet_user():
+  return "\n#========================================================#\n#             start your rythm generation!               #\n#========================================================#\n"
+message = greet_user()
+print("PlinCode says; ", message)
+
+#========================================================#
+#                    generate kick                       #
+#========================================================#
+#general/global
+def generate_plinko_path(num_pulse, num_Notes):
+    path = []
+    count = 0
+
+
+#rule 1 kick: first step must be a kick
+    for i in range(num_pulse):
+
+        #first step
+        if i == 0:
+            path.append("L")
+            count += 1
+            continue
+
+        remaining_steps = num_pulse - i
+        remaining_notes = num_Notes - count #for every L placed kick count is plus one so remaining kicks is min 1
+
+        #left overs need to be placed
+        if remaining_notes == remaining_steps:
+            step = "L"
+
+        #if we have enough L next steps are R
+        elif remaining_notes == 0:
+            step = "R"
+
+            
+
+        #rule 2 kick: max 2 L after eachother
+        #if len path is bigger then 2, 1 step previous is L, 2 steps previous is L, next step is R
+        elif len(path) >= 2 and path[-1] == "L" and path[-2] == "L":
+            step = "R"
+        #len looks at the amount of items in a list
+
+        #otherwise (if possible) randomly chooses L or R for next step
+        else:
+            step = random.choice(["L", "R"])
+
+        #checks how many L are left over
+        path.append(step)
+
+        if step == "L":
+            count += 1
+
+    return path
+
+
+
+num_pulse = int(input("Enter amount of pulses:\n"))
+num_kickNotes = int(input("Enter amount of kicks notes:\n"))
+num_snrNotes = int(input("Enter amount of snare notes:\n"))
+num_HHNotes = int(input("Enter amount of hihat notes:\n"))
+
+kick_path = generate_plinko_path(num_pulse, num_kickNotes)
+print("kick path:", kick_path)
+snr_path = generate_plinko_path(num_pulse, num_snrNotes)
+print("snare path:", snr_path)
+HH_path = generate_plinko_path(num_pulse, num_HHNotes)
+print("hihat path:", HH_path)
+
+"""
+#this generates a (semi) random path based on user input of pulse and kick
+def generate_kick_path(num_pulse, num_kick_Notes):
+    kick_path = []
+    kick_count = 0
+
+
+#rule 1 kick: first step must be a kick
+    for i in range(num_pulse):
+
+        #first step
+        if i == 0:
+            kick_path.append("L")
+            kick_count += 1
+            continue
+
+        remaining_steps = num_pulse - i
+        remaining_kicks = num_kick_Notes - kick_count #for every L placed kick count is plus one so remaining kicks is min 1
+
+        #left overs need to be placed
+        if remaining_kicks == remaining_steps:
+            kick_step = "L"
+
+        #if we have enough L next steps are R
+        elif remaining_kicks == 0:
+            kick_step = "R"
+
+            
+
+        #rule 2 kick: max 2 L after eachother
+        #if len path is bigger then 2, 1 step previous is L, 2 steps previous is L, next step is R
+        elif len(kick_path) >= 2 and kick_path[-1] == "L" and kick_path[-2] == "L":
+            kick_step = "R"
+        #len looks at the amount of items in a list
+
+        #otherwise (if possible) randomly chooses L or R for next step
+        else:
+            kick_step = random.choice(["L", "R"])
+
+        #checks how many L are left over
+        kick_path.append(kick_step)
+
+        if kick_step == "L":
+            kick_count += 1
+
+    return kick_path
+
+
+
+num_pulse = int(input("Enter amount of pulses:\n"))
+num_kick_Notes = int(input("Enter amount of kicks:\n"))
+kick_path = generate_kick_path(num_pulse, num_kick_Notes)
+print("kick:", kick_path)
+
+
+#========================================================#
+#                   generate snare                       #
+#========================================================#
+#adjust snare rules
+
+def generate_snr_path(num_pulse, num_snr_Notes):
+    snr_path = []
+    snr_count = 0
+
+
+    for i in range(num_pulse):
+
+        #rule 1 snare: First step is always R/snare is never at the same time as kick
+        if i == 0:
+            snr_path.append("R")
+            continue
+
+        remaining_snr_steps = num_pulse - i
+        remaining_snr = num_snr_Notes - snr_count
+
+        #kick is L, so snare must be R
+        if kick_path[i] == "L":
+            snr_step = "R"
+
+        #we need to place left over snares
+        elif remaining_snr == remaining_snr_steps:
+            snr_step = "L"
+
+        #already have enough snares
+        elif remaining_snr == 0:
+            snr_step = "R"
+
+        #otherwise randomly choose
+        else:
+            snr_step = random.choice(["L", "R"])
+
+        snr_path.append(snr_step)
+
+        if snr_step == "L":
+            snr_count += 1
+
+    return snr_path
+
+
+num_snr_Notes = int(input("Enter amount of snares:\n"))
+snr_path = generate_snr_path(num_pulse, num_snr_Notes)
+print("snare:", snr_path)
+
+#========================================================#
+#                   generate Hihat                       #
+#========================================================#
+#change rules!!!
+#make 16th???
+
+def generate_HH_path(num_pulse, num_HH_Notes):
+    HH_path = []
+    HH_count = 0
+
+
+#rule 1 HH: first step always R
+    for i in range(num_pulse):
+
+        #first step
+        if i == 0:
+            HH_path.append("R")
+            HH_count += 1
+            continue
+
+        remaining_HH_steps = num_pulse - i
+        remaining_HH = num_HH_Notes - HH_count #for every L placed kick count is plus one so remaining kicks is min 1
+
+        
+        #left overs need to be placed
+        if remaining_HH == remaining_HH_steps:
+            HH_step = "L"
+
+        #if we have enough L next steps are R
+        elif remaining_HH == 0:
+            HH_step = "R"
+
+            
+
+        #rule 2 kick: max 2 L after eachother
+        #if len path is bigger then 2, 1 step previous is L, 2 steps previous is L, next step is R
+        elif len(HH_path) >= 2 and HH_path[-1] == "L" and HH_path[-2] == "L":
+            HH_step = "R"
+        #len looks at the amount of items in a list
+
+        #otherwise (if possible) randomly chooses L or R for next step
+        else:
+            HH_step = random.choice(["L", "R"])
+
+        #checks how many L are left over
+        HH_path.append(HH_step)
+
+        if HH_step == "L":
+            HH_count += 1
+
+    return HH_path
+
+
+num_HH_Notes = int(input("Enter amount of Hihats:\n"))
+HH_path = generate_HH_path(num_pulse, num_HH_Notes)
+print("Hihat:", HH_path)
+
+print("\nyour complete path:", "\nkick: ", kick_path, "\nsnare:", snr_path, "\nhihat:", HH_path)
+"""
+#========================================================#
+#                    L/R to 1/0 rhythm                   #
+#========================================================#
+#generates L or R path to 1 or 0
+#global/general
+
+def path_to_rhythm(path):
+    rhythm = []
+    for step in path:
+      if step == "L":
+        rhythm.append(1)
+      else:
+        rhythm.append(0)
+
+    return rhythm
+
+kick_nummeral = path_to_rhythm(kick_path)
+print("kick ", kick_nummeral)
+snr_nummeral = path_to_rhythm(snr_path)
+print("snare ", snr_nummeral)
+HH_nummeral = path_to_rhythm (HH_path)
+print("hihat ", HH_nummeral)
+
+"""
+#KICK
+def path_to_rhythm(kick_path):
+    rhythm = []
+    for kick_step in kick_path:
+      if kick_step == "L":
+        rhythm.append(1)
+      else:
+        rhythm.append(0)
+
+    return rhythm
+
+kick_nummeral = path_to_rhythm(kick_path)
+
+print("\nnumeral kick:", kick_nummeral)
+
+#SNARE
+def path_to_rhythm(snr_path):
+    rhythm = []
+    for snr_step in snr_path:
+      if snr_step == "L":
+        rhythm.append(1)
+      else:
+        rhythm.append(0)
+
+    return rhythm
+
+snr_nummeral = path_to_rhythm(snr_path)
+
+print("\nnumeral snare:", snr_nummeral)
+
+#HH
+def path_to_rhythm(HH_path):
+    rhythm = []
+    for HH_step in HH_path:
+      if HH_step == "L":
+        rhythm.append(1)
+      else:
+        rhythm.append(0)
+
+    return rhythm
+
+HH_nummeral = path_to_rhythm(HH_path)
+
+print("\nnumeral hihat:", HH_nummeral)
+"""
+#========================================================#
+#                       play rythm                       #
+#========================================================#
+#make playable by samples
+
+bpm = float(input("\nEnter bpm: "))
+
+note_durations = kick_nummeral #so we can later on start samples on the 1
+#timeduartions klopt check timestamps!!!!!!
+quarternote_dur = 60.0 / bpm #calculate duration of a quarternote in seconds
+print("\nBPM:", bpm)
+print("Quarternote:", quarternote_dur)
+
+# transform note durations to sequence of time durations
+time_durations = []
+for note_dur in note_durations:
+    time_durations.append(quarternote_dur)#let op dus NIET * note durations, want sommige note durations zijn in mijn geval 0 en dan missen we stappen
+
+print("\ntime_durations", time_durations)
+
+# transform time durations to a sequence of timestamps
+timestamp_seq = []
+# use the sum of the durations to calculate the timestamp for each note
+sum = 0
+for time_dur in time_durations:
+    timestamp_seq.append(sum)
+    sum = sum + time_dur
+
+print("timestamp_seq:", timestamp_seq)
+
+print("\n") #for visual structure
+
+
+
+#########start sample choice##########
+#====================================#
+#         choose sample pack         #
+#====================================#
+#let user choose sample pack
+sample_name = ["plop", "laser", "dog"] #volgorde komt overeen met de nummers in []
+
+def sample_options(sample_name): #een functie met een lijst met namen van sample packs 
+    print("option 0: " + sample_name[0]) #deze voorlegt aan gebruiker
+    print("option 1: " + sample_name[1])
+    print("option 2: " + sample_name[2])
+
+
+    #vraag om sample
+    sample_choice = int(input("Enter prefered sample:\n"))#gebruiker een keuze laat maken 
+
+    pygame.init()
+    sample_packs = [pygame.mixer.Sound("assets/plop.wav"),
+                    pygame.mixer.Sound("assets/Laser1.wav"),
+                    pygame.mixer.Sound("assets/Dog2.wav")]
+
+    print("Sample:" + sample_name[sample_choice])
+
+    return sample_packs[sample_choice]  #index van de keuze uit de lijst returned.
+    #gebruikt index om iets uit mijn lijst sample_packs te halen
+
+sample = sample_options (sample_name)
+
+###########end sample choice##########
+
+
+
+# retrieve the first time stamp
+if timestamp_seq:
+    ts = timestamp_seq.pop(0)
+else:
+    # list contains no items
+    print("no timestamps --> exit")
+    exit()
+
+current_note = (0)
+# store the current time
+time_zero = time.time()
+print("time zero:", time_zero)
+print("your rhythm is playing...")
+
+# iterate through time sequence and play sample
+while current_note < len(note_durations) and current_note < len(timestamp_seq):
+
+    now = time.time() - time_zero
+    # check if we passed the next timestamp,
+    # if so, play sample and fetch new timestamp
+    if now >= timestamp_seq[current_note]:
+
+        if note_durations[current_note] == 1:
+            sample.play()  #zorgt ervoor dat er alleen een noot speelt op de 1 (dus alle ander timestamps (0) zijn stil)
+
+        current_note += 1
+            #else:
+                    #no new timestamp available --> break while loop
+                    
+                    #break
+
+        time.sleep(0.001)
+
+# wait till last sample is done playing before exit
+time.sleep(time_durations[-1]) #deze time duration is eigenlijk de reden dat we hier zo tering veel code aan kwijt zijn
+print("rhythm is done playing!")
+
+#========================================================#
+#                   store as midi file                   #
+#========================================================#
+#store as midi file
+#28/9
+
+
+#========================================================#
+#                        TO DO                           #
+#========================================================#
+#adjust rules (snare & hihat)
+#if L are left over place anyway even if its against rules
+
+#make sample PACKS
+#make it so kick snr and hh play not just kick
+
+
+
+#store as midi file^ 28/9
+
+#code error messages 28/9
+
+#clean up (comments and unused code)
+#if time left over: add accent (or smt) based on where it lands
+#                   change sample options 0, 1, 2 to 1, 2, 3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############################################################
+"""
+num_notes = input("Enter num notes\n")
+note_durations = list()
+
+for i in range(int(num_notes)):
+    note_durations.append(float(input("Enter note duration\n")))
+
+print("note_durations:", note_durations)
+
+#vraag bpm op & bereken quarternote
+bpm = float(input("Enter BPM\n"))
+quarternote_dur = 60.0 / bpm
+print("bpm:", bpm, "quarternote_dur", quarternote_dur)
+"""
+"""
+#note durations wordt time durations
+time_durations = []
+for note_dur in note_durations:
+    time_durations.append(quarternote_dur * note_dur)
+
+print("time_durations", time_durations)
+"""
+"""
+#time duration wordt time stamp
+timestamp_seq = []
+#telt de duraties op om de timestamp uit te rekenen
+sum = 0
+for time_dur in time_durations:
+    timestamp_seq.append(sum)
+    sum = sum + time_dur
+
+print("timestamp_seq:", timestamp_seq)
+"""
+"""
+#eerste time stamp
+if timestamp_seq:
+    ts = timestamp_seq.pop(0)
+else:
+    #waarneer een lijst geen items heeft
+    print("no timestamps --> exit")
+    exit()
+
+#slaat current time op
+time_zero = time.time()
+print("time zero:", time_zero)
+
+#iterate through time sequence and play sample
+while True:
+    now = time.time() - time_zero
+    #is de vorige time stamp true?
+    #ja? volgende time stamp
+    if(now >= ts):
+        sample.play()
+        if timestamp_seq:
+            ts = timestamp_seq.pop(0)
+        else:
+            #no new timestamp available --> break while loop
+            break
+
+    time.sleep(0.001)
+
+#wacht tot het eind vd laatste sample daarna pas exiten
+time.sleep(time_durations[-1])
+"""
+"""
+#tijd
+#note_duration omzetten naar tijd (sec)
+time_durations = []
+for note_dur in note_durations:
+    time_durations.append(quarternote_dur * note_dur)
+
+print("time_durations", time_durations)
+
+
+
+# ___ play rhythm ___
+# load a sample
+sample_plop = sa.WaveObject.from_wave_file("../assets/Plop.wav")
+
+# retrieve current time to store as t = 0
+time_zero = time.time()
+# allow to calcultate time duration sum according to time durations
+time_seq_sum = 0
+# play rhythm
+for time_dur in time_durations:
+    # calculate time deviation
+    time_now = time.time() - time_zero
+    time_deviation = time_now - time_seq_sum
+    print("time_deviation:", time_deviation)
+    # play sample and pause according to time duration
+    sample_plop.play()
+    time.sleep(time_dur)
+    # update time sum
+    time_seq_sum += time_dur
+"""
+"""
+# ___ play rhythm ___
+# init  mixer module and load sample
+pygame.init()
+sample = pygame.mixer.Sound('../assets/plop.wav')
+
+# play sequence
+for time_dur in time_durations:
+    # play sample and pause according to time duration
+    sample.play()
+    time.sleep(time_dur)
+"""
+"""
+# init  mixer module and load samples
+pygame.init()
+sampleHigh = pygame.mixer.Sound('../assets/plop.wav')
+sampleMid = pygame.mixer.Sound('../assets/Laser1.wav')
+sampleLow = pygame.mixer.Sound('../assets/Dog2.wav')
+
+# play high sample
+sampleHighPlay = sampleHigh.play()
+# wait till sample is done playing
+time.sleep(sampleHigh.get_length())
+
+# play mid sample
+sampleMidPlay = sampleMid.play()
+# wait till sample is done playing
+time.sleep(sampleMid.get_length())
+
+# play low sample
+sampleLowPlay = sampleLow.play()
+# wait till sample is done playing
+time.sleep(sampleLow.get_length())
+"""
