@@ -5,7 +5,7 @@ import pygame
 import time
 #import simpleaudio
 import random
-import user_name_module 
+#import user_name_module 
 #========================================================#
 #                  greet user function                   #
 #========================================================#
@@ -15,12 +15,12 @@ message = greet_user()
 print("PlinCode says; ", message)
 
 
-
+"""
 user_name = user_name_module.get_user_name()
 
 print("Retrieved user name.")
 print("Hi,", user_name)
-
+"""
 #========================================================#
 #                    generate path                       #
 #========================================================#
@@ -87,13 +87,37 @@ print("hihat path:", HH_path)
 #                       play rythm                       #
 #========================================================#
 #make playable by samples
-bpm = float(input("\nEnter bpm: "))
+
+#========================================#
+#              choose bpm               #
+#========================================#
+correctInput = False
+# default bpm
+bpm = 120
+
+while (not correctInput):
+    user_bpm = input("enter a bpm (leave empty for default 120)")
+
+    # check if we 'received' an empty string
+    if not user_bpm:
+        # empty string --> use default
+        correctInput = True
+    else:
+        try:
+            bpm = float(user_bpm)
+            correctInput = True
+        except:
+            print("Incorrect input - please enter a bpm (or enter nothing - default bpm)")
+            
+print("Succeeded, bpm is: ", bpm)
+
+
+
 
 note_durations = kick_path #so we can later on start samples on L
-
 quarternote_dur = 60.0 / bpm #calculate duration of a quarternote in seconds
-print("\nBPM:", bpm)
-print("Quarternote:", quarternote_dur)
+#print("\nBPM:", bpm)
+print("\nQuarternote:", quarternote_dur)
 
 
 # transform note durations to sequence of time durations
@@ -101,7 +125,7 @@ time_durations = []
 for note_dur in note_durations:
     time_durations.append(quarternote_dur)#let op dus NIET * note durations, want sommige note durations zijn in mijn geval 0 en dan missen we stappen
                                             #^^^ leftover oude 0/1 systeem is nu gewoon direct van L/R systeem
-print("\ntime_durations", time_durations)
+print("time_durations", time_durations)
 
 
 
@@ -148,16 +172,13 @@ print("\n") #for visual structure
 #         choose sample pack         #
 #====================================#
 #let user choose sample pack
-sample_name = ["plop", "drums", "drum2"] #volgorde komt overeen met de nummers in []
 
-def sample_options(sample_name): #een functie met een lijst met namen van sample packs 
-    print("option 0: " + sample_name[0]) #deze voorlegt aan gebruiker
-    print("option 1: " + sample_name[1])
-    print("option 2: " + sample_name[2])
 
-    #vraag om sample
-    sample_choice = int(input("Enter prefered sample:\n"))#gebruiker een keuze laat maken 
+example_question = "Choose your samplepack: "
+example_options = ["plop", "regular drumkit", "extra drumkit"]
 
+def retrieve_user_option(question, options):
+    
     pygame.init()
     sample_packs = [ [ 
                         pygame.mixer.Sound('assets/plop.wav'), 
@@ -172,18 +193,75 @@ def sample_options(sample_name): #een functie met een lijst met namen van sample
                         pygame.mixer.Sound('assets/snare2.wav'), 
                         pygame.mixer.Sound('assets/hihat2.mp3')] 
                        ] 
-    #gets the pack that the user choose
-    selected_pack = sample_packs[sample_choice] #map the samples 
-    sampleKick = selected_pack[0] 
-    sampleSnr = selected_pack[1] 
+
+    
+
+    
+    if(not str(question)):
+        raise TypeError(
+            "retrieve_user_option function expects first parameter to be a string")
+    else:
+        # default option
+        selected_option = 1
+        correctInput = False
+
+        while (not correctInput):
+            # present user with options and ask for selection
+            print(question)
+            for i, option in enumerate(options):
+                print(i + 1, ":", option)
+            print("leave empty for default opion 1")
+            user_input = input()
+
+            # if answer is empty --> use default
+            if not user_input:
+                correctInput = True
+
+            # answer was not empty, validate answer
+            else:
+                try:
+                    # if answer is an integer, try to use this answer
+                    input_index = int(user_input)
+                    # validate if selection is in range
+                    if (input_index >= 1 and input_index <= len(options)):
+                        selected_option = input_index
+
+                        correctInput = True
+                    # TODO - throw error
+                except:
+                    print("Incorrect input - please enter a valid value.\n" +
+                        "Please try again.\n\n")
+
+
+                        # User chooses 1, 2 or 3
+            # Python list uses 0, 1 or 2
+            selected_option -= 1
+
+            # Get the selected pack
+            selected_pack = sample_packs[selected_option]
+
+    # Get the three samples from that pack
+    sampleKick = selected_pack[0]
+    sampleSnr = selected_pack[1]
     sampleHH = selected_pack[2]
 
-    print("Sample pack:", sample_name[sample_choice])
-    return selected_pack[0], selected_pack[1], selected_pack[2] #index van de keuze uit de lijst
-    #gebruikt index om iets uit mijn lijst sample_packs te halen
+    print("Selected drumkit:", options[selected_option])
 
-sampleKick, sampleSnr, sampleHH = sample_options(sample_name)
-sample = (sampleKick, sampleSnr, sampleHH)
+    return sampleKick, sampleSnr, sampleHH
+
+    """    # after while shift selected option
+        selected_option -= 1
+
+    return selected_option"""
+
+sampleKick, sampleSnr, sampleHH = retrieve_user_option(
+example_question,
+example_options
+)
+"""
+selected_index = retrieve_user_option(example_question, example_options)
+print("Selected drumkit: ", example_options[selected_index])
+"""
 ###########end sample choice##########
 
 

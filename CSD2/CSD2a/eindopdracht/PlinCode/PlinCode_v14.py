@@ -5,7 +5,7 @@ import pygame
 import time
 #import simpleaudio
 import random
-import user_name_module 
+#import user_name_module 
 #========================================================#
 #                  greet user function                   #
 #========================================================#
@@ -13,13 +13,6 @@ def greet_user():
   return "\n#========================================================#\n#             start your rythm generation!               #\n#========================================================#\n"
 message = greet_user()
 print("PlinCode says; ", message)
-
-
-
-user_name = user_name_module.get_user_name()
-
-print("Retrieved user name.")
-print("Hi,", user_name)
 
 #========================================================#
 #                    generate path                       #
@@ -87,13 +80,37 @@ print("hihat path:", HH_path)
 #                       play rythm                       #
 #========================================================#
 #make playable by samples
-bpm = float(input("\nEnter bpm: "))
+
+#========================================#
+#              choose bpm               #
+#========================================#
+correctInput = False
+# default bpm
+bpm = 120
+
+while (not correctInput):
+    user_bpm = input("enter a bpm (leave empty for default 120)")
+
+    # check if we 'received' an empty string
+    if not user_bpm:
+        # empty string --> use default
+        correctInput = True
+    else:
+        try:
+            bpm = float(user_bpm)
+            correctInput = True
+        except:
+            print("Incorrect input - please enter a bpm (or enter nothing - default bpm)")
+            
+print("Succeeded, bpm is: ", bpm)
+
+
+
 
 note_durations = kick_path #so we can later on start samples on L
-
 quarternote_dur = 60.0 / bpm #calculate duration of a quarternote in seconds
-print("\nBPM:", bpm)
-print("Quarternote:", quarternote_dur)
+#print("\nBPM:", bpm)
+print("\nQuarternote:", quarternote_dur)
 
 
 # transform note durations to sequence of time durations
@@ -101,7 +118,7 @@ time_durations = []
 for note_dur in note_durations:
     time_durations.append(quarternote_dur)#let op dus NIET * note durations, want sommige note durations zijn in mijn geval 0 en dan missen we stappen
                                             #^^^ leftover oude 0/1 systeem is nu gewoon direct van L/R systeem
-print("\ntime_durations", time_durations)
+print("time_durations", time_durations)
 
 
 
@@ -156,7 +173,7 @@ def sample_options(sample_name): #een functie met een lijst met namen van sample
     print("option 2: " + sample_name[2])
 
     #vraag om sample
-    sample_choice = int(input("Enter prefered sample:\n"))#gebruiker een keuze laat maken 
+    sample_question = int(input("Enter prefered sample:\n"))#gebruiker een keuze laat maken 
 
     pygame.init()
     sample_packs = [ [ 
@@ -173,12 +190,12 @@ def sample_options(sample_name): #een functie met een lijst met namen van sample
                         pygame.mixer.Sound('assets/hihat2.mp3')] 
                        ] 
     #gets the pack that the user choose
-    selected_pack = sample_packs[sample_choice] #map the samples 
+    selected_pack = sample_packs[sample_question] #map the samples 
     sampleKick = selected_pack[0] 
     sampleSnr = selected_pack[1] 
     sampleHH = selected_pack[2]
 
-    print("Sample pack:", sample_name[sample_choice])
+    print("Sample pack:", sample_name[sample_question])
     return selected_pack[0], selected_pack[1], selected_pack[2] #index van de keuze uit de lijst
     #gebruikt index om iets uit mijn lijst sample_packs te halen
 

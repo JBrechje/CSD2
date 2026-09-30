@@ -1,11 +1,11 @@
 
 from tracemalloc import start
-
+from midiutil import MIDIFile
 import pygame
 import time
 #import simpleaudio
 import random
-import user_name_module 
+#import user_name_module 
 #========================================================#
 #                  greet user function                   #
 #========================================================#
@@ -15,12 +15,12 @@ message = greet_user()
 print("PlinCode says; ", message)
 
 
-
+"""
 user_name = user_name_module.get_user_name()
 
 print("Retrieved user name.")
 print("Hi,", user_name)
-
+"""
 #========================================================#
 #                    generate path                       #
 #========================================================#
@@ -87,13 +87,36 @@ print("hihat path:", HH_path)
 #                       play rythm                       #
 #========================================================#
 #make playable by samples
-bpm = float(input("\nEnter bpm: "))
+#========================================#
+#              choose bpm                #
+#========================================#
+correctInput = False
+# default bpm
+bpm = 120
+
+while (not correctInput):
+    user_bpm = input("enter a bpm (leave empty for default 120): ")
+
+    # check if we 'received' an empty string
+    if not user_bpm:
+        # empty string --> use default
+        correctInput = True
+    else:
+        try:
+            bpm = float(user_bpm)
+            correctInput = True
+        except:
+            print("Incorrect input - please enter a bpm (or enter nothing - default bpm)")
+            
+print("Succeeded, bpm is: ", bpm)
+
+
+
 
 note_durations = kick_path #so we can later on start samples on L
-
 quarternote_dur = 60.0 / bpm #calculate duration of a quarternote in seconds
-print("\nBPM:", bpm)
-print("Quarternote:", quarternote_dur)
+#print("\nBPM:", bpm)
+print("\nQuarternote:", quarternote_dur)
 
 
 # transform note durations to sequence of time durations
@@ -101,7 +124,7 @@ time_durations = []
 for note_dur in note_durations:
     time_durations.append(quarternote_dur)#let op dus NIET * note durations, want sommige note durations zijn in mijn geval 0 en dan missen we stappen
                                             #^^^ leftover oude 0/1 systeem is nu gewoon direct van L/R systeem
-print("\ntime_durations", time_durations)
+print("time_durations", time_durations)
 
 
 
@@ -148,22 +171,14 @@ print("\n") #for visual structure
 #         choose sample pack         #
 #====================================#
 #let user choose sample pack
-sample_name = ["plop", "drums", "drum2"] #volgorde komt overeen met de nummers in []
-
-def sample_options(sample_name): #een functie met een lijst met namen van sample packs 
-    print("option 0: " + sample_name[0]) #deze voorlegt aan gebruiker
-    print("option 1: " + sample_name[1])
-    print("option 2: " + sample_name[2])
-
-    #vraag om sample
-    sample_choice = int(input("Enter prefered sample:\n"))#gebruiker een keuze laat maken 
-
-    pygame.init()
-    sample_packs = [ [ 
+pygame.init()
+sample_question = "Choose your samplepack: "
+sample_options = ["plop", "regular drumkit", "extra drumkit"]
+sample_packs = [ [ 
                         pygame.mixer.Sound('assets/plop.wav'), 
                         pygame.mixer.Sound('assets/Dog2.wav'), 
                         pygame.mixer.Sound('assets/Laser1.wav')], 
-                     [ 
+                        [ 
                         pygame.mixer.Sound('assets/kick.wav'), 
                         pygame.mixer.Sound('assets/snare.wav'), 
                         pygame.mixer.Sound('assets/hihat.wav')], 
@@ -171,19 +186,74 @@ def sample_options(sample_name): #een functie met een lijst met namen van sample
                         pygame.mixer.Sound('assets/kick2.wav'), 
                         pygame.mixer.Sound('assets/snare2.wav'), 
                         pygame.mixer.Sound('assets/hihat2.mp3')] 
-                       ] 
-    #gets the pack that the user choose
-    selected_pack = sample_packs[sample_choice] #map the samples 
-    sampleKick = selected_pack[0] 
-    sampleSnr = selected_pack[1] 
+                        ] 
+
+def retrieve_user_input(question, options):
+    # be sure the question is a string
+    if(not str(question)):
+        raise TypeError(
+            "retrieve_user_option function expects first parameter to be a string")
+    # present user with options and ask for selection
+    print(question)
+    for i, option in enumerate(options):
+        print(i + 1, ":", option)
+    print("leave empty for default opion 1")
+    return input()
+
+
+def validate_int_in_inclusive_range(value, range_low, range_high):
+    try:
+        int_value = int(value)
+        if (int_value >= range_low and int_value <= range_high):
+            # int and in range
+            return True;
+    except:
+        # no valid int
+        return False
+    # not in range
+    return False
+
+def retrieve_user_option(question, options):
+    # default option, offset of +1 due to readability for user
+    selected_option = 1
+    correctInput = False
+
+    while (not correctInput):
+        user_input = retrieve_user_input(question, options)
+        # validate user input
+        if(validate_int_in_inclusive_range(user_input, 1, len(options))):
+            # user input is in given range
+            selected_option = int(user_input)
+            correctInput = True
+        # if answer is empty --> use default value
+        elif(not user_input):
+            correctInput = True
+        # else incorrect input -->  retry
+        else:
+            print("Incorrect input - please enter a valid value.\n" +
+                "Please try again.\n\n")
+
+    # user chooses 1, 2 or 3
+    # Python uses 0, 1 or 2
+    selected_option -= 1
+
+    # get the selected pack
+    selected_pack = sample_packs[selected_option]
+
+    # get the three samples
+    sampleKick = selected_pack[0]
+    sampleSnr = selected_pack[1]
     sampleHH = selected_pack[2]
 
-    print("Sample pack:", sample_name[sample_choice])
-    return selected_pack[0], selected_pack[1], selected_pack[2] #index van de keuze uit de lijst
-    #gebruikt index om iets uit mijn lijst sample_packs te halen
+    print("Selected drumkit:", options[selected_option])
 
-sampleKick, sampleSnr, sampleHH = sample_options(sample_name)
-sample = (sampleKick, sampleSnr, sampleHH)
+    return sampleKick, sampleSnr, sampleHH
+
+
+sampleKick, sampleSnr, sampleHH = retrieve_user_option(
+    sample_question,
+    sample_options)
+        
 ###########end sample choice##########
 
 
@@ -285,8 +355,122 @@ print("rhythm is done playing!")
 #========================================================#
 #                   store as midi file                   #
 #========================================================#
-#store as midi file
-#28/9
+"""
+# create your MIDI object...........................................
+mf = MIDIFile(1)     # only 1 track..................................
+track = 0   # the only track..........................................
+
+time = 0    # start at the beginning....................................
+mf.addTrackName(track, time, "Sample Track")..............................
+mf.addTempo(track, time, 120)............................................
+
+
+# add some notes.......................................................
+channel = 0............................................................
+volume = 60............................................................
+print("Volume:",volume)................................................
+
+pitch = 60           # C4 (middle C)...................................
+time = 0             # start on beat 0.................................
+duration = 1         # 1 beat long.....................................
+mf.addNote(track, channel, pitch, time, duration, volume)..............
+
+volume += 30
+print("Volume:",volume)
+
+pitch = 64           # E4..............................................
+time = 2             # start on beat 2.................................
+duration = 1         # 1 beat long.....................................
+mf.addNote(track, channel, pitch, time, duration, volume)..............
+
+volume += 30
+print("Volume:",volume)
+
+pitch = 67           # G4..............................................
+time = 4             # start on beat 4.................................
+duration = 1         # 1 beat long.....................................
+mf.addNote(track, channel, pitch, time, duration, volume)..............
+
+# write it to disk.....................................................
+with open("mysong.mid",'wb') as outf:..................................
+    mf.writeFile(outf).................................................
+
+"""
+
+def save_rhythm_as_midi(kick_path, snr_path, HH_path, bpm, filename):
+# create your MIDI object
+    mf = MIDIFile(1)     # only 1 track
+    track = 0   # the only track
+
+    time = 0    # start at the beginning
+    mf.addTrackName(track, time, "Sample Track")
+    mf.addTempo(track, time, bpm)
+        
+    # add some notes
+    channel = 9  #midi channel 10 = drums
+    volume = 60
+    #print("Volume:",volume)
+
+    #midi pitches
+    kick_pitch = 35
+    snare_pitch = 38
+    hihat_pitch = 42
+
+
+
+    duration = 1 # 1 beat long
+
+
+    volume += 30
+    print("Volume:",volume)
+
+
+    # NOTE: DUPLICATE CODE below, would be better to place stuff below in a function
+
+
+    #kick
+    for i, step in enumerate(kick_path):
+        if step == "L":
+            mf.addNote(track, channel, kick_pitch, i, duration, volume)                          
+    #                                            i is time
+
+    #snare
+    for i, step in enumerate(snr_path):
+        if step == "L":
+            mf.addNote(track, channel, snare_pitch, i, 1, volume)
+
+    #hihat
+    for i, step in enumerate(HH_path):
+        if step == "L":
+            mf.addNote(track, channel, hihat_pitch, i, 1, volume)
+
+    # write it to disk
+    with open(filename, "wb") as outf:
+        mf.writeFile(outf)
+    print("MIDI saved as:", filename)
+
+
+
+    #ui for midi file name and saving
+    save_midi = input("\nWould you like to save this rhythm as a MIDI file? (y/n): ")
+
+    if save_midi.lower() == "y":
+        filename = input("Enter a filename (without .mid): ")
+
+        if not filename:
+            filename = "plincode_rhythm"
+
+        filename = filename + ".mid"
+
+        save_rhythm_as_midi(
+            kick_path,
+            snr_path,
+            HH_path,
+            bpm,
+            filename
+        )
+    else:
+        print("MIDI file was not saved.")
 
 
 #========================================================#
@@ -295,12 +479,13 @@ print("rhythm is done playing!")
 #adjust rules (snare & hihat)!!!!!!
 #if L are left over place anyway even if its against rules
 #fix else/break
+#filter for bpm input (min and max value)
 
-#store as midi file^ 28/9
+#check if midi still works if instrument does not start on 1
+#make a return if user does not want to save start again
 #code error messages 28/9
 
 
 #clean up unused code [done]
 #clean up comments
 #if time left over: add accent (or smt) based on where it lands
-#                   change sample options 0, 1, 2 to 1, 2, 3
