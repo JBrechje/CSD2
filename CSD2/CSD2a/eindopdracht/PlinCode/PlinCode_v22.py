@@ -1,0 +1,473 @@
+import pygame
+import time
+from midiutil import MIDIFile
+#import simpleaudio
+import random
+
+global kick_note
+
+#====================== greet user function ======================#
+def greet_user():
+  return "\n#========================================================#\n#             start your rythm generation!               #\n#========================================================#\n"
+message = greet_user()
+print("PlinCode says; ", message)
+
+#====================== generate path ======================#
+#generates a path
+def generate_plinko_path(num_pulse, num_Notes, blocked_path=None):
+    path = []
+    count = 0
+
+    for i in range(num_pulse):
+
+        #rule 4: snare may never be on 1
+        if blocked_path is not None and i == 0:
+            step = "R"
+
+        #rule 1 kick: first step must be a kick
+        #kick always starts on step 1
+        elif blocked_path is None and i == 0:
+            step = "L"
+
+        else:
+            remaining_steps = num_pulse - i
+            #for every L placed instrument note count is +1 one so remaining notes is -1
+            remaining_notes = num_Notes - count
+
+
+            #left overs need to be placed
+            if remaining_notes == remaining_steps:
+                step = "L"
+
+            #if all L are placed next steps are R
+            elif remaining_notes == 0:
+                step = "R"
+
+            #rule 3: snare is never at the same time as the kick
+            elif blocked_path is not None and blocked_path[i] == "L":
+                step = "R"
+
+            #rule 2 kick: max 2 L after eachother
+            elif len(path) >= 2 and path[-1] == "L" and path[-2] == "L":
+                step = "R"
+
+            #otherwise (if possible) randomly chooses L or R for next step
+            else:
+                step = random.choice(["L", "R"])
+
+        path.append(step)
+
+        if step == "L":
+            count += 1
+
+    return path
+
+
+
+num_pulse = int(input("Enter amount of pulses:\n"))
+num_kickNotes = int(input("Enter amount of kicks notes:\n"))
+num_snrNotes = int(input("Enter amount of snare notes:\n"))
+num_HHNotes = int(input("Enter amount of hihat notes:\n"))
+
+kick_path = generate_plinko_path(num_pulse, num_kickNotes)
+snr_path = generate_plinko_path(num_pulse, num_snrNotes, blocked_path = kick_path) #blocked path so its not at the same time as the kick
+HH_path = generate_plinko_path(num_pulse, num_HHNotes)
+
+print("kick path:", kick_path)
+print("snare path:", snr_path)
+print("hihat path:", HH_path)
+
+#====================== play rythmm ======================#
+#make playable by samples
+#========= choose bpm =========#
+correctInput = False
+bpm = 120 #default bpm
+
+while (not correctInput):
+    user_bpm = input("\nenter a bpm (leave empty for default 120): ")
+
+    #check if we 'received' an empty string
+    if not user_bpm:
+        #empty string --> use default
+        correctInput = True
+    else:
+        try:
+            bpm = float(user_bpm)
+            correctInput = True
+        except:
+            print("Incorrect input - please enter a bpm (or enter nothing - default bpm)")
+            
+print("Succeeded, bpm is: ", bpm)
+#========= end choose bpm =========#
+
+note_durations = kick_path #so we can later on start samples on L
+quarternote_dur = 60.0 / bpm #calculate duration of a quarternote in seconds
+print("\nQuarternote:", quarternote_dur)
+
+# transform note durations to sequence of time durations
+time_durations = []
+for note_dur in note_durations:
+    #NOT * note durations, bc some notes durations are 0 (R)
+    #which would mean we would skip that note
+    time_durations.append(quarternote_dur)
+print("time_durations", time_durations)
+
+#creates (general) timestamps based on the rhythm and note durations
+#so we can later play the seperate paths from the timestamps
+def create_timestamps(rhythm, note_duration):
+    timestamps = []
+
+    for i in range(len(rhythm)):
+        timestamps.append(i * note_duration)
+
+    return timestamps
+
+# transform time durations to a sequence of timestamps
+timestamp_seq = []
+# use the sum of the durations to calculate the timestamp for each note
+sum = 0
+for time_dur in time_durations:
+    timestamp_seq.append(sum)
+    sum = sum + time_dur
+
+print("timestamp_seq:", timestamp_seq)
+
+#here are the seperate timestamp paths created and printed
+kick_timestamps = create_timestamps(kick_path, quarternote_dur)
+snr_timestamps = create_timestamps(snr_path, quarternote_dur)
+HH_timestamps = create_timestamps(HH_path, quarternote_dur)
+
+print("\nkick timestamps:", kick_timestamps)
+print("snare timestamps:", snr_timestamps)
+print("hihat timestamps:", HH_timestamps)
+
+print("\n") #for visual structure
+
+#========= choose sample pack =========#
+pygame.init()
+sample_question = "Choose your samplepack: "
+sample_options = ["plop", "regular drumkit", "extra drumkit"]
+sample_packs = [ [ 
+                        pygame.mixer.Sound('assets/plop.wav'), 
+                        pygame.mixer.Sound('assets/Dog2.wav'), 
+                        pygame.mixer.Sound('assets/Laser1.wav')], 
+                        [ 
+                        pygame.mixer.Sound('assets/kick.wav'), 
+                        pygame.mixer.Sound('assets/snare.wav'), 
+                        pygame.mixer.Sound('assets/hihat.wav')], 
+                    [ 
+                        pygame.mixer.Sound('assets/kick2.wav'), 
+                        pygame.mixer.Sound('assets/snare2.wav'), 
+                        pygame.mixer.Sound('assets/hihat2.mp3')] 
+                        ] 
+
+def retrieve_user_input(question, options):
+    # be sure the question is a string
+    if(not str(question)):
+        raise TypeError(
+            "retrieve_user_option function expects first parameter to be a string")
+    # present user with options and ask for selection
+    print(question)
+    for i, option in enumerate(options):
+        print(i + 1, ":", option)
+    print("leave empty for default opion 1")
+    return input()
+
+
+def validate_int_in_inclusive_range(value, range_low, range_high):
+    try:
+        int_value = int(value)
+        if (int_value >= range_low and int_value <= range_high):
+            # int and in range
+            return True
+    except:
+        # no valid int
+        return False
+    # not in range
+    return False
+
+def retrieve_user_option(question, options):
+    #default option +1 for readability for user
+    selected_option = 1
+    correctInput = False
+
+    while (not correctInput):
+        user_input = retrieve_user_input(question, options)
+        # validate user input
+        if(validate_int_in_inclusive_range(user_input, 1, len(options))):
+            # user input is in given range
+            selected_option = int(user_input)
+            correctInput = True
+        # if answer is empty --> use default value
+        elif(not user_input):
+            correctInput = True
+        # else incorrect input -->  retry
+        else:
+            print("Incorrect input - please enter a valid value.\n" +
+                "Please try again.\n\n")
+
+    # user chooses 1, 2 or 3
+    # Python uses 0, 1 or 2
+    selected_option -= 1
+
+    # get the selected pack
+    selected_pack = sample_packs[selected_option]
+
+    # get the three samples
+    sampleKick = selected_pack[0]
+    sampleSnr = selected_pack[1]
+    sampleHH = selected_pack[2]
+
+    print("Selected drumkit:", options[selected_option])
+
+    return sampleKick, sampleSnr, sampleHH
+
+
+sampleKick, sampleSnr, sampleHH = retrieve_user_option(
+    sample_question,
+    sample_options)
+#========= end choose sample =========#
+
+# retrieve the first time stamp
+if timestamp_seq:
+    ts = timestamp_seq.pop(0)
+    
+else:
+    # list contains no items
+    print("no timestamps --> exit")
+    exit()
+
+
+# PLAY RHYTHM #
+kick_note = 0
+snr_note = 0
+HH_note = 0
+
+# store the current time
+time_zero = time.time()
+print("time zero:", time_zero)
+
+print("\nyour rhythm is playing...")
+# iterate through time sequence and play sample
+while True:
+    now = time.time() - time_zero
+
+    # check if we passed the next timestamp,
+        # if so, play sample and fetch new timestamp
+    if(now >= ts):
+        if kick_path[kick_note] == "L":
+                            sampleKick.play()
+        #if snr_path[snr_note] == "L":
+        #                    sampleSnr.play()
+        #if HH_path[HH_note] == "L":
+        #                    sampleHH.play()
+        #if timestamp_seq:
+        #    ts = timestamp_seq.pop(0)
+        else:
+            # no new timestamp available --> break while loop
+            break
+    
+
+while (
+    kick_note < len(kick_path)
+    or snr_note < len(snr_path)
+    or HH_note < len(HH_path)
+):
+
+    now = time.time() - time_zero
+
+    #========= kick =========#
+    if kick_note < len(kick_path):
+
+        if now >= create_timestamps[kick_note]:
+
+            if kick_path[kick_note] == "L":
+                sampleKick.play()
+
+            kick_note += 1
+
+    #========= snare =========#
+    if snr_note < len(snr_path):
+
+        if now >= snr_timestamps[snr_note]:
+
+            if snr_path[snr_note] == "L":
+                sampleSnr.play()
+
+            snr_note += 1
+
+    #========= hihat =========#
+    if HH_note < len(HH_path):
+
+        if now >= HH_timestamps[HH_note]:
+
+            if HH_path[HH_note] == "L":
+                sampleHH.play()
+
+            HH_note += 1
+"""
+
+            /////////////////////
+
+
+
+
+#for repetition in range(4): #repeat the rhythm 4 times
+    print("\nyour rhythm is playing...")
+
+    kick_note = 0
+    snr_note = 0
+    HH_note = 0
+
+    # iterate through time sequence and play sample
+    while (
+        kick_note < len(kick_path)
+        or snr_note < len(snr_path)
+        or HH_note < len(HH_path)):
+        #while current_note < len(note_durations)....
+
+        now = time.time() - time_zero
+        # check if we passed the next timestamp,
+        # if so, play sample and fetch new timestamp
+
+        #========= kick =========#   
+        if kick_note < len(kick_timestamps):
+        #....and current_note < len(timestamp_seq):
+
+            if now >= kick_timestamps[kick_note]:
+                # if now >= timestamp_seq[current_note]:
+
+                if kick_path[kick_note] == "L":
+                    sampleKick.play()  #zorgt ervoor dat er alleen een noot speelt op de L (dus alle ander timestamps (R) zijn stil)
+                #if note_durations[current_note] == 1:
+                    #sample.play()
+
+                kick_note += 1
+                #current_note += 1
+            #else:
+                #no new timestamp available --> break while loop
+                #print("no new timestamp available for kick --> break while loop")                 
+        #break
+
+
+        #======== snare =========#
+        if snr_note < len(snr_timestamps):
+
+            if now >= snr_timestamps[snr_note]:
+
+                if snr_path[snr_note] == "L":
+                    sampleSnr.play()
+
+                snr_note += 1
+            #else:
+                #no new timestamp available --> break while loop
+                #print("no new timestamp available for snare --> break while loop")
+                #break
+
+
+        #========= hihat =========#
+        if HH_note < len(HH_timestamps):
+
+            if now >= HH_timestamps[HH_note]:
+
+                if HH_path[HH_note] == "L":
+                    sampleHH.play()
+
+                HH_note += 1
+                """
+
+            #time.sleep(0.001)
+    #else:
+                #no new timestamp available --> break while loop
+        #print("no new timestamp available for snare --> break while loop")
+                                                
+        #break
+
+# wait till last sample is done playing before exit
+time.sleep(time_durations[-1])
+    
+print("rhythm is done playing!")
+
+#====================== store as midi file ======================#
+def save_rhythm_as_midi(kick_path, snr_path, HH_path, bpm, filename):
+# create your MIDI object
+    mf = MIDIFile(1)     # only 1 track
+    track = 0   # the only track
+
+    time = 0    # start at the beginning
+    mf.addTrackName(track, time, "Sample Track")
+    mf.addTempo(track, time, bpm)
+        
+    # add some notes
+    channel = 9  #midi channel 10 = drums
+    volume = 80
+    #print("Volume:",volume)
+
+    #midi pitches
+    kick_pitch = 35
+    snare_pitch = 38
+    hihat_pitch = 42
+
+    duration = 1 # 1 beat long
+
+    # NOTE: DUPLICATE CODE below, would be better to place stuff below in a function
+
+    #kick
+    for i, step in enumerate(kick_path):
+        if step == "L":
+            mf.addNote(track, channel, kick_pitch, i, duration, volume)                          
+    #                                            i = time
+
+    #snare
+    for i, step in enumerate(snr_path):
+        if step == "L":
+            mf.addNote(track, channel, snare_pitch, i, 1, volume)
+
+    #hihat
+    for i, step in enumerate(HH_path):
+        if step == "L":
+            mf.addNote(track, channel, hihat_pitch, i, 1, volume)
+
+    # write it to disk
+    with open(filename, "wb") as outf:
+        mf.writeFile(outf)
+    print("MIDI saved as:", filename)
+
+    #ui for midi file name and saving
+save_midi = input(
+    "\nWould you like to save this rhythm as a MIDI file? (y/n): "
+)
+
+if save_midi.lower() == "y":
+
+    filename = input(
+        "Enter a filename (without .mid): "
+    )
+
+    if not filename:
+        filename = "plincode_rhythm"
+
+    filename = filename + ".mid"
+
+    save_rhythm_as_midi(
+        kick_path,
+        snr_path,
+        HH_path,
+        bpm,
+        filename
+    )
+
+else:
+    print("MIDI file was not saved.")
+
+
+#========================================================#
+#                        TO DO                           #
+#========================================================#
+#make a return if user does not want to save start again
+#check error messages
+
+#clean up unused code
+#clean up comments
+#if time left over: add accent (or smt) based on where it lands
+#                   filter for bpm input (min and max value)

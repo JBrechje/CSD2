@@ -1,28 +1,20 @@
-
-from tracemalloc import start
-from midiutil import MIDIFile
 import pygame
 import time
+from midiutil import MIDIFile
 #import simpleaudio
 import random
-#import user_name_module 
-#========================================================#
-#                  greet user function                   #
-#========================================================#
+
+#====================== greet user function ======================#
 def greet_user():
   return "\n#========================================================#\n#             start your rythm generation!               #\n#========================================================#\n"
 message = greet_user()
 print("PlinCode says; ", message)
 
-#========================================================#
-#                    generate path                       #
-#========================================================#
+#====================== generate path ======================#
 #generates a path
 def generate_plinko_path(num_pulse, num_Notes, blocked_path=None):
     path = []
     count = 0
-
-
 
     for i in range(num_pulse):
 
@@ -77,18 +69,14 @@ num_HHNotes = int(input("Enter amount of hihat notes:\n"))
 
 kick_path = generate_plinko_path(num_pulse, num_kickNotes)
 print("kick path:", kick_path)
-snr_path = generate_plinko_path(num_pulse, num_snrNotes, blocked_path = kick_path) #so its not at the same time as the kick
+snr_path = generate_plinko_path(num_pulse, num_snrNotes, blocked_path = kick_path) #blocked path so its not at the same time as the kick
 print("snare path:", snr_path)
 HH_path = generate_plinko_path(num_pulse, num_HHNotes)
 print("hihat path:", HH_path)
 
-#========================================================#
-#                       play rythm                       #
-#========================================================#
+#====================== play rythmm ======================#
 #make playable by samples
-#========================================#
-#              choose bpm                #
-#========================================#
+#========= choose bpm =========#
 correctInput = False
 bpm = 120 #default bpm
 
@@ -107,8 +95,7 @@ while (not correctInput):
             print("Incorrect input - please enter a bpm (or enter nothing - default bpm)")
             
 print("Succeeded, bpm is: ", bpm)
-########### end choose bpm ##########
-
+#========= end choose bpm =========#
 
 note_durations = kick_path #so we can later on start samples on L
 quarternote_dur = 60.0 / bpm #calculate duration of a quarternote in seconds
@@ -117,11 +104,13 @@ print("\nQuarternote:", quarternote_dur)
 # transform note durations to sequence of time durations
 time_durations = []
 for note_dur in note_durations:
-    time_durations.append(quarternote_dur)#let op dus NIET * note durations, want sommige note durations zijn in mijn geval 0 en dan missen we stappen
-                                            #^^^ leftover oude 0/1 systeem is nu gewoon direct van L/R systeem
+    #NOT * note durations, bc some notes durations are 0 (R)
+    #which would mean we would skip that note
+    time_durations.append(quarternote_dur)
 print("time_durations", time_durations)
 
-#creates (general) timestamps based on the rhythm and note durations so we can later play the seperate paths from the timestamps
+#creates (general) timestamps based on the rhythm and note durations
+#so we can later play the seperate paths from the timestamps
 def create_timestamps(rhythm, note_duration):
     timestamps = []
 
@@ -151,13 +140,7 @@ print("hihat timestamps:", HH_timestamps)
 
 print("\n") #for visual structure
 
-
-
-#########start sample choice##########
-#====================================#
-#         choose sample pack         #
-#====================================#
-#let user choose sample pack
+#========= choose sample pack =========#
 pygame.init()
 sample_question = "Choose your samplepack: "
 sample_options = ["plop", "regular drumkit", "extra drumkit"]
@@ -201,7 +184,7 @@ def validate_int_in_inclusive_range(value, range_low, range_high):
     return False
 
 def retrieve_user_option(question, options):
-    # default option, offset of +1 due to readability for user
+    #default option +1 for readability for user
     selected_option = 1
     correctInput = False
 
@@ -240,14 +223,12 @@ def retrieve_user_option(question, options):
 sampleKick, sampleSnr, sampleHH = retrieve_user_option(
     sample_question,
     sample_options)
-        
-########### end choose sample ##########
-
-
+#========= end choose sample =========#
 
 # retrieve the first time stamp
 if timestamp_seq:
     ts = timestamp_seq.pop(0)
+    
 else:
     # list contains no items
     print("no timestamps --> exit")
@@ -256,7 +237,7 @@ else:
 current_note = (0)
 # store the current time
 
-for repetition in range(4):
+for repetition in range(4): #repeat the rhythm 4 times
     time_zero = time.time()
     print("\ntime zero:", time_zero)
     print("\nyour rhythm is playing...")
@@ -270,17 +251,15 @@ for repetition in range(4):
         kick_note < len(kick_path)
         or snr_note < len(snr_path)
         or HH_note < len(HH_path)):
-        #while current_note < len(note_durations) ......... and current_note < len(timestamp_seq):
+        #while current_note < len(note_durations)....
 
         now = time.time() - time_zero
         # check if we passed the next timestamp,
         # if so, play sample and fetch new timestamp
 
-        #====================================#
-        #               kick                 #
-        #====================================#    
+        #========= kick =========#   
         if kick_note < len(kick_timestamps):
-        #and current_note < len(timestamp_seq):
+        #....and current_note < len(timestamp_seq):
 
             if now >= kick_timestamps[kick_note]:
                 # if now >= timestamp_seq[current_note]:
@@ -292,15 +271,13 @@ for repetition in range(4):
 
                 kick_note += 1
                 #current_note += 1
-
             #else:
                 #no new timestamp available --> break while loop
-                                    
-            #    break
+                #print("no new timestamp available for kick --> break while loop")                 
+        #break
 
-        #====================================#
-        #               snare                #
-        #====================================#
+
+        #======== snare =========#
         if snr_note < len(snr_timestamps):
 
             if now >= snr_timestamps[snr_note]:
@@ -309,15 +286,13 @@ for repetition in range(4):
                     sampleSnr.play()
 
                 snr_note += 1
-
             #else:
                 #no new timestamp available --> break while loop
-                                                
-            #    break
+                #print("no new timestamp available for snare --> break while loop")
+                #break
 
-        #====================================#
-        #                hihat               #
-        #====================================#
+
+        #========= hihat =========#
         if HH_note < len(HH_timestamps):
 
             if now >= HH_timestamps[HH_note]:
@@ -328,20 +303,18 @@ for repetition in range(4):
                 HH_note += 1
 
                 time.sleep(0.001)
-
-            #else:
+    #else:
                 #no new timestamp available --> break while loop
+        #print("no new timestamp available for snare --> break while loop")
                                                 
-            #    break
+        #break
 
 # wait till last sample is done playing before exit
 time.sleep(time_durations[-1])
     
 print("rhythm is done playing!")
 
-#========================================================#
-#                   store as midi file                   #
-#========================================================#
+#====================== store as midi file ======================#
 def save_rhythm_as_midi(kick_path, snr_path, HH_path, bpm, filename):
 # create your MIDI object
     mf = MIDIFile(1)     # only 1 track
@@ -369,7 +342,7 @@ def save_rhythm_as_midi(kick_path, snr_path, HH_path, bpm, filename):
     for i, step in enumerate(kick_path):
         if step == "L":
             mf.addNote(track, channel, kick_pitch, i, duration, volume)                          
-    #                                            i is time
+    #                                            i = time
 
     #snare
     for i, step in enumerate(snr_path):
@@ -385,7 +358,6 @@ def save_rhythm_as_midi(kick_path, snr_path, HH_path, bpm, filename):
     with open(filename, "wb") as outf:
         mf.writeFile(outf)
     print("MIDI saved as:", filename)
-
 
     #ui for midi file name and saving
 save_midi = input(
@@ -413,6 +385,7 @@ if save_midi.lower() == "y":
 
 else:
     print("MIDI file was not saved.")
+
 
 #========================================================#
 #                        TO DO                           #
