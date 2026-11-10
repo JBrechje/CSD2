@@ -189,7 +189,6 @@ def create_events(rhythm, instrument_name, bpm, sample):
 
     return events
 
-
 #print("Kick events:", kick_events)
 #print("Snare events:", snr_events)
 #print("Hihat events:", HH_events)
@@ -314,9 +313,7 @@ def retrieve_user_option(question, options):
 
     return sampleKick, sampleSnr, sampleHH
 
-sampleKick, sampleSnr, sampleHH = retrieve_user_option(
-    sample_question,
-    sample_options)
+sampleKick, sampleSnr, sampleHH = retrieve_user_option(sample_question,sample_options)
 
 
 kick_events = create_events(kick_path, "kick", bpm, sampleKick)
@@ -356,105 +353,6 @@ for repetition in range(4):
 
 time.sleep(0.0001)
 print("rhythm is done playing!")
-
-"""#works as counter for the len   
-    kick_note = 0
-    snr_note = 0
-    HH_note = 0
-
-    # iterate through time sequence and play sample
-    while (
-        #starts at 0 < path steps (= true) and keeps going until false
-        kick_note < len(kick_events)
-        or snr_note < len(snr_events)
-        or HH_note < len(HH_events)):
-        
-
-        now = time.time() - time_zero 
-        # check if we passed the next timestamp,
-        # if so, play sample and fetch new timestamp
-
-        #========= kick =========#   
-        if kick_note < len(kick_events) and now >= kick_events[kick_note]["timestamp"]:
-            sampleKick.play()
-            kick_note += 1
-        #======== snare =========#
-        if snr_note < len(snr_events) and now >= snr_events[snr_note]["timestamp"]:
-            sampleSnr.play()
-            snr_note += 1
-        #========= hihat =========#
-        if HH_note < len(HH_events) and now >= HH_events[HH_note]["timestamp"]:
-            sampleHH.play()
-            HH_note += 1
-    #else:
-                #no new timestamp available --> break while loop                                   
-        #break
-
-#wait till last sample is done playing before exit
-time.sleep(0.0001)
-print("rhythm is done playing!")"""
-
-"""
-#kick_sample = sampleKick
-#snare_sample = sampleSnr
-#hihat_sample = sampleHH
-
-
-kick_events = {
-    "timestamp": 1000,
-    "sample_name": "kick",
-    "sample": sampleKick,
-    "velocity": 71,
-    "duration_msec": 1000
-}
-
-snare_events = {
-    "timestamp": 2000, # msec w.r.t start of program
-    "sample_name": "snare", # name of instrument in text
-    "sample": sampleSnr, # reference to sound file
-    "velocity": 82, # numeric MIDI-based, 0-127
-    "duration_msec": 1000 # msec
-}
-
-HH_events = {
-    "timestamp": 3000,
-    "sample_name": "hihat",
-    "sample": sampleHH,
-    "velocity": 71,
-    "duration_msec": 1000
-}
-
-""""""
-def handle_note_event(event):
-    """"""handles note events by playing the referenced sample""""""
-    print("Handling note event, sample name:", event["sample_name"])
-    sample = event["sample"]
-    sample.set_volume(event["velocity"] / 127.0)
-    sample.play()
-
-# call the note handler for each event
-# NOTE: ignoring timestamp in this example, simply wait 1 sec. in between
-handle_note_event(kick_events)
-time.sleep(1)
-
-handle_note_event(snare_events)
-time.sleep(1)
-
-handle_note_event(HH_events)
-time.sleep(1)
-
-
-def get_timestamp(event):
-    return event["timestamp"]
-
-""""""
-all_events = kick_events + snr_events + HH_events
-
-all_events.sort(key = get_timestamp)
-print("All events sorted by timestamp:", all_events)"""
-
-
-#print("rhythm is done playing!")
 
 #====================== store as midi file ======================#
 def save_rhythm_as_midi(kick_path, snr_path, HH_path, bpm, filename):
