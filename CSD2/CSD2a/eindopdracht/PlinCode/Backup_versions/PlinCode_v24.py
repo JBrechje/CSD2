@@ -21,8 +21,12 @@ def generate_plinko_path(num_pulse, num_Notes, blocked_path = None):
 
     for i in range(num_pulse):
 
+        #if there step is 0 all steps are silent
+        if num_Notes == 0:
+            step = "R"
+
         #rule 4: snare may never be on 1
-        if blocked_path is not None and i == 0:
+        elif blocked_path is not None and i == 0:
             step = "R"
 
         #rule 1 kick: first step must be a kick
@@ -76,13 +80,13 @@ while (not correctPulse):
             else:
                 print("pulse must be between 3 and 25")
         except ValueError:
-            print("Incorrect input - please enter a whole number between 3 and 25 (or leave empty for default).")
+            print("Incorrect input, please enter a whole number between 3 and 25 (or leave empty for default).")
 
 
 while (not correctInput):
-    user_kickNotes = input("\nenter amount of kick notes(default = 3): ")
-    user_snrNotes = input("Enter amount of snare notes(default = 3): ")
-    user_HHNotes = input("Enter amount of hihat notes(default = 3): ")
+    user_kickNotes = input("\nenter amount of kick notes: ")
+    user_snrNotes = input("Enter amount of snare notes: ")
+    user_HHNotes = input("Enter amount of hihat notes: ")
     #check if we 'received' an empty string
     if not user_kickNotes and not user_snrNotes and not user_HHNotes:
         num_kickNotes = 3
@@ -98,18 +102,18 @@ while (not correctInput):
 
             #check that every amount is between 1 and the number of pulses
             if (
-                1 <= num_kickNotes <= num_pulse
-                and 1 <= num_snrNotes <= num_pulse
-                and 1 <= num_HHNotes <= num_pulse
+                0 <= num_kickNotes <= num_pulse
+                and 0 <= num_snrNotes <= num_pulse
+                and 0 <= num_HHNotes <= num_pulse
             ):
                 correctInput = True
             else:
                 print(
-                    "all note amounts must be whole numbers between 1 and the amount of pulses."
+                    "all note amounts must be whole numbers between 0 and the amount of pulses (or leave empty for default)."
                     ) 
         except ValueError:
             print(
-                "Incorrect input - please enter whole numbers between 1 and the amount of pulses"
+                "Incorrect input, please enter whole numbers between 0 and the amount of pulses (or leave empty for default)"
             )
             
 print("\namount of pulses:", num_pulse)
@@ -131,7 +135,7 @@ correctInput = False
 bpm = 120 #default bpm
 
 while (not correctInput):
-    user_bpm = input("\nenter BPM! (default = 120): ")
+    user_bpm = input("\nenter BPM: ")
     #check if we 'received' an empty string
     if not user_bpm:
         #empty string --> use default
@@ -143,10 +147,10 @@ while (not correctInput):
             if bpm >= 100 and bpm <= 300:
                 correctInput = True
             else:
-                print("BPM must be greater than 100 and smaller than 300.")
+                print("BPM must be greater than 100 and smaller than 300 (or leave empty for default).")
 
         except:
-            print("Incorrect input - please enter a BPM (or enter nothing - default bpm)")
+            print("Incorrect input, please enter a BPM (or leave empty for default)")
             
 print("BPM is: ", bpm)
 
@@ -229,7 +233,7 @@ def retrieve_user_option(question, options):
             correctInput = True
         # else incorrect input -->  retry
         else:
-            print("Incorrect input - please enter a valid value of 1, 2 or 3.\n" +
+            print("Incorrect input, please enter a valid value of 1, 2 or 3 (or leave empty for default).\n" +
                 "Please try again.\n\n")
 
     #user chooses 1, 2 or 3
