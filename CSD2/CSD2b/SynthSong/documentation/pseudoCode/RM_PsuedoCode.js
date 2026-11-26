@@ -1,7 +1,7 @@
 input melody = ["note.frequency list"];
 
 
-//decayTime / ui parameter
+//modulator frequency / UI parameter
 ASK modulatorFrequency(): "how long do you want the decayTime?"
     
 VALIDATE modulatorFrequency()
@@ -18,65 +18,29 @@ VALIDATE modulatorFrequency()
 
 FOR EACH note IN melody{
 
-    carrierFrequency() = note.frequency
+    carrierSignal = note.frequency
+    modulatorSignal = modulatorFrequency
+
+    envelope = (1,       //atack ms
+                0.25,    //decay ms
+                0.5,     //sustain 0-1
+                1);      //release ms
 
      FOR EACH sample DURING noteDuration{
 
 
-            //ciskas
-            oscillatorSample = oscillator.getSample();
-            // here envelope is viewed as a signal generator, hence the getSample instead of getValue
-            amplitude = envelope.getSample();
-            output = oscillatorSample * amplitude;
-
-
-            ////////??/////
+            //oscillatorSample = oscillator.getSample();
             carrierSignal = carrier.getSample()/* frequency */ * carrierAmplitude;
 
             modulatorSignal = modulator.getSample()/* frequency */ * modulatorAmplitude;
 
-            output = carrierSignal * modulatorSignal;
+            modOutput = carrierSignal * modulatorSignal;
 
 
-            /*
-            carrierSignal = carrierFrequency * carrierAmplitude
-            modulatorSignal =  modulatorFrequency * modulatorAmplitude
+            // here envelope is viewed as a signal generator, hence the getSample instead of getValue
+            envelopeAmplitude = envelope.getSample();
+            output = modOutput * envelopeAmplitude;
 
-            output = carrierSignal * modulatorSignal*/
 
      }
-} PLAY noteOutput;
-
-
-
-
-
-
-////////////////UI///////////////////
-
-/*
-ASK parameters "Change parameters?"{
-
-    if userSelects(yes){
-        RETURN TO (ASK modulatorFrequency)
-    } 
-    else{
-        DISPLAY "Save?"
-    }
-}END IF
-
-
-ASK filename "enter filename"{  
-    VALIDATE (filename)
-        if filename == valid{
-        continue
-    }
-    else {
-        "invalid name"
-        RETURN TO (ASK filename)
-    } SAVE "file saved as ...."
-} END*/
-
-
-
-
+} PLAY output;

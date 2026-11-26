@@ -20,7 +20,7 @@ public:
   float getFrequency();
 
 private:
-  const float pi = acos (-1);  //atan(1) * 4; <-- vak van Pieter.
+  const float pi = acos (-1.0f);  //atan(1) * 4; <-- vak van Pieter.
   float frequency;
   float amplitude;
   float phase;

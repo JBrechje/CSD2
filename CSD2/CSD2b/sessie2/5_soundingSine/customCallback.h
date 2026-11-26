@@ -1,6 +1,8 @@
 #include "audiocomponent.h"
 //  Daan Schrier
 #include "sine.h"
+#include "saw.h"
+#include "square.h"
 
 struct CustomCallback : AudioCallback {
     explicit CustomCallback (double Fs) : AudioCallback(Fs) {
@@ -29,4 +31,6 @@ struct CustomCallback : AudioCallback {
 
 private:
   Sine sine{440};
+  Saw saw{440};
+  Square square{440};
 };
